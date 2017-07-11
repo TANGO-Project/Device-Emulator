@@ -1,6 +1,4 @@
-%an vgalei error exw valei sxolio sti 557 kai 'jei' adaytou sti 562 
-
-function  [output,emulations] = my1 (A,D,HW,cpu_ref)
+function  [output,emulations] = my2 (A,D,HW,cpu_ref,range)
 
 
 [tasks,diff_nodes,max_cores]=size(D);
@@ -63,11 +61,11 @@ ready=ones(tasks,1);
 
 %until the last task is scheduled do
  while (list(sink)~=-1)
- %for uuu=1:2
+ %for uuu=1:34
  
  %find the next task to schedule
  [val,ind]=max(list); 
-       
+      
    %find predecessor tasks of task and put them to predecessors() array
    pred=0;
    for i=1:sink
@@ -84,13 +82,22 @@ ready=ones(tasks,1);
        end
    end
    
-  min_single=zeros(diff_nodes,3); min_single(:,1)=99999; %contains approximated EFT values for single thread
-  min_multi=zeros(diff_nodes,3); min_multi(:,1)=99999; min_multi(:,3)=1; %contains approximated EFT values for multi thread implementations
-  EFT_my=zeros(diff_nodes,common_nodes,max_cores);
-EFT_my_multi_thread=zeros(diff_nodes,common_nodes,max_cores);
-EFT_my(:,:,:)=99999;
-EFT_my_multi_thread(:,:,:)=99999;
-tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
+  %min, j, k, max 
+  min_single=zeros(diff_nodes,4); min_single(:,1)=99999; min_single(:,4)=99999;%contains approximated EFT values for single thread
+  min_multi=zeros(diff_nodes,4); min_multi(:,1)=99999;  min_multi(:,3)=1; min_multi(:,4)=99999; %contains approximated median EFT value for multi thread implementations
+
+EFT_my_min=zeros(diff_nodes,common_nodes,max_cores);
+EFT_my_min(:,:,:)=99999;
+EFT_my_max=zeros(diff_nodes,common_nodes,max_cores);
+EFT_my_max(:,:,:)=99999;
+
+EFT_my_multi_thread_min=zeros(diff_nodes,common_nodes,max_cores);
+EFT_my_multi_thread_min(:,:,:)=99999;
+EFT_my_multi_thread_max=zeros(diff_nodes,common_nodes,max_cores);
+EFT_my_multi_thread_max(:,:,:)=99999;
+
+tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores,max_cores);
+min_tmp=zeros(diff_nodes,max_cores);
 
 %APPROXIMATE EFT OF ALL NODES. if gpu is selected none of the following is executed
 
@@ -125,91 +132,192 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                 T_pred_max=0;
             end
             
-           if (i>cpu_ref) % if the node is GPU, FPGA, then it is faster than the best multithread
-              EFT_my(i,j,k)=ex_times(ind)/speedup(max_cores)+max(T_pred_max,avail_proc(i,j,k)); 
-           else
-              EFT_my(i,j,k)=ex_times(ind)+max(T_pred_max,avail_proc(i,j,k)); 
-           end
+              EFT_my_min(i,j,k)=ex_times(ind)*range(i,1)+max(T_pred_max,avail_proc(i,j,k)); 
+              EFT_my_max(i,j,k)=ex_times(ind)*range(i,2)+max(T_pred_max,avail_proc(i,j,k)); 
+              
 
            if ( k==6 )
-                     EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(6) + max(T_pred_max,max(avail_proc(i,j,:))); % 6-thread EFT
-                    tmp_avail_proc(i,j,:)=1;
+                     EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(6))*range(i,1) + max(T_pred_max,max(avail_proc(i,j,:))); % 6-thread EFT
+                     tmp_avail_proc(i,j,6,:)=1;
+                     EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(6))*range(i,2) + max(T_pred_max,max(avail_proc(i,j,:))); % 6-thread EFT
            elseif ( k==5 )
-                     tmp_avail_proc(i,j,:)=1; [tmp,tind]=max(avail_proc(i,j,:)); tmp_avail_proc(i,j,tind)=0;
-                    EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(5) + max( T_pred_max, max(tmp_avail_proc(i,j,:).* avail_proc(i,j,:)) ); % 5-thread EFT
+                     tmp_avail_proc(i,j,5,:)=1; [tmp,tind]=max(avail_proc(i,j,:)); tmp_avail_proc(i,j,5,tind)=0;
+                     
+                    tmp1=zeros(max_cores,1); tmp2=zeros(max_cores,1);
+                    tmp1(:)=tmp_avail_proc(i,j,5,:); tmp2(:)=avail_proc(i,j,:);
+                    
+                    EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(5))*range(i,1) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 5-thread EFT
+                    EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(5))*range(i,2) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 5-thread EFT                    
+                    clear tmp1 tmp2;
            elseif ( k==4 )
                  if ( HW(i,j,6) ==1 ) %if it is a 6-core cpu
-                    tmp_avail_proc(i,j,:)=1; [tmp,tind]=max(avail_proc(i,j,:)); tmp_avail_proc(i,j,tind)=0;
+                    tmp_avail_proc(i,j,4,:)=1; [tmp,tind]=max(avail_proc(i,j,:)); tmp_avail_proc(i,j,4,tind)=0;
                     copy=avail_proc; copy(i,j,tind)=-1;
-                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,tind)=0;
-                    EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(4) + max( T_pred_max, max(tmp_avail_proc(i,j,:).* avail_proc(i,j,:)) ); % 4-thread EFT
+                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,4,tind)=0;
+                    
+                    tmp1=zeros(max_cores,1); tmp2=zeros(max_cores,1); 
+                    tmp1(:)=tmp_avail_proc(i,j,4,:); tmp2(:)=avail_proc(i,j,:);
+                    
+                    EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(4))*range(i,1) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 4-thread EFT
+                    EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(4))*range(i,2) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 4-thread EFT                    
+                    clear tmp1 tmp2;
+                    % if avail_proc(:)==0 then less '1' are propagated which is not right
+                    
                  else %if it is a 4-core cpu
-                    EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(4) + max(T_pred_max,max(avail_proc(i,j,1:4))); % 6-thread EFT
-                    tmp_avail_proc(i,j,1:4)=1;
+                    EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(4))*range(i,1) + max(T_pred_max,max(avail_proc(i,j,1:4))); % 6-thread EFT
+                    EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(4))*range(i,2) + max(T_pred_max,max(avail_proc(i,j,1:4))); % 6-thread EFT                    
+                    tmp_avail_proc(i,j,4,1:4)=1; 
                  end
            elseif ( k==3 )
                if ( HW(i,j,6) ==1 ) %if it is a 6-core cpu
-                    tmp_avail_proc(i,j,:)=1; [tmp,tind]=max(avail_proc(i,j,:)); tmp_avail_proc(i,j,tind)=0;
+                    tmp_avail_proc(i,j,3,:)=1; [tmp,tind]=max(avail_proc(i,j,:)); tmp_avail_proc(i,j,3,tind)=0;
                     copy=avail_proc; copy(i,j,tind)=-1;
-                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,tind)=0;
+                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,3,tind)=0;
                     copy(i,j,tind)=-1;
-                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,tind)=0;
-                    EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(3) + max( T_pred_max, max(tmp_avail_proc(i,j,:).* avail_proc(i,j,:)) ); % 3-thread EFT
+                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,3,tind)=0;
+                    
+                    tmp1=zeros(max_cores,1); tmp2=zeros(max_cores,1);
+                    tmp1(:)=tmp_avail_proc(i,j,3,:); tmp2(:)=avail_proc(i,j,:); 
+                    
+                    EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(3))*range(i,1) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 3-thread EFT
+                    EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(3))*range(i,2) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 3-thread EFT                    
+                    clear tmp1 tmp2;
                else %if it is a 4-core cpu
-                    tmp_avail_proc(i,j,1:4)=1; [tmp,tind]=max(avail_proc(i,j,1:4)); tmp_avail_proc(i,j,tind)=0;
-                    EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(3) + max( T_pred_max, max(tmp_avail_proc(i,j,1:4).* avail_proc(i,j,1:4)) );                    
+                    tmp_avail_proc(i,j,3,1:4)=1; [tmp,tind]=max(avail_proc(i,j,1:4)); tmp_avail_proc(i,j,3,tind)=0;
+                    
+                    tmp1=zeros(4,1); tmp2=zeros(4,1);
+                    tmp1(:)=tmp_avail_proc(i,j,3,1:4); tmp2(:)=avail_proc(i,j,1:4);
+                    
+                    EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(3))*range(i,1) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) );                    
+                    EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(3))*range(i,2) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) );   
+                    clear tmp1 tmp2;
                end
            elseif ( k==2 )
                if ( HW(i,j,6) ==1 ) %if it is a 6-core cpu               
-                    tmp_avail_proc(i,j,:)=1; [tmp,tind]=max(avail_proc(i,j,:)); tmp_avail_proc(i,j,tind)=0;
+                    tmp_avail_proc(i,j,2,:)=1; [tmp,tind]=max(avail_proc(i,j,:)); tmp_avail_proc(i,j,2,tind)=0;
                     copy=avail_proc; copy(i,j,tind)=-1;
-                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,tind)=0; copy(i,j,tind)=-1;
-                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,tind)=0; copy(i,j,tind)=-1;
-                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,tind)=0;
-                    EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(2) + max( T_pred_max, max(tmp_avail_proc(i,j,:).* avail_proc(i,j,:)) ); % 2-thread EFT  
+                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,2,tind)=0; copy(i,j,tind)=-1;
+                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,2,tind)=0; copy(i,j,tind)=-1;
+                    [tmp,tind]=max(copy(i,j,:)); tmp_avail_proc(i,j,2,tind)=0;
+                    
+                    tmp1=zeros(max_cores,1); tmp2=zeros(max_cores,1); 
+                    tmp1(:)=tmp_avail_proc(i,j,2,:); tmp2(:)=avail_proc(i,j,:); 
+                    
+                    EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(2))*range(i,1) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 2-thread EFT  
+                    EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(2))*range(i,2) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 2-thread EFT                      
+                    clear tmp1 tmp2;
                elseif ( ( HW(i,j,4) ==1 ) && ( HW(i,j,6) ==0 ) ) %if it is a 4-core cpu  
-                    tmp_avail_proc(i,j,1:4)=1; [tmp,tind]=max(avail_proc(i,j,1:4)); tmp_avail_proc(i,j,tind)=0;
+                    tmp_avail_proc(i,j,2,1:4)=1; [tmp,tind]=max(avail_proc(i,j,1:4)); tmp_avail_proc(i,j,2,tind)=0;
                     copy=avail_proc; copy(i,j,tind)=-1;
-                    [tmp,tind]=max(copy(i,j,1:4)); tmp_avail_proc(i,j,tind)=0;
-                    EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(2) + max( T_pred_max, max(tmp_avail_proc(i,j,1:4).* avail_proc(i,j,1:4)) ); % 2-thread EFT
+                    [tmp,tind]=max(copy(i,j,1:4)); tmp_avail_proc(i,j,2,tind)=0;
+                    
+                    tmp1=zeros(4,1); tmp2=zeros(4,1);
+                    tmp1(:)=tmp_avail_proc(i,j,2,1:4); tmp2(:)=avail_proc(i,j,1:4);
+                    
+                    EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(2))*range(i,1) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 2-thread EFT
+                    EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(2))*range(i,2) + max( T_pred_max, max(tmp1(:) .* tmp2(:)) ); % 2-thread EFT                    
+                    clear tmp1 tmp2;
                else  %if it is a 2-core cpu 
-                    EFT_my_multi_thread(i,j,k)=ex_times(ind)/speedup(2) + max(T_pred_max,max(avail_proc(i,j,1:2))); % 6-thread EFT
-                    tmp_avail_proc(i,j,1:2)=1;                   
+                    EFT_my_multi_thread_min(i,j,k)=(ex_times(ind)/speedup(2))*range(i,1) + max(T_pred_max,max(avail_proc(i,j,1:2))); % 6-thread EFT
+                    EFT_my_multi_thread_max(i,j,k)=(ex_times(ind)/speedup(2))*range(i,2) + max(T_pred_max,max(avail_proc(i,j,1:2))); % 6-thread EFT                    
+                    tmp_avail_proc(i,j,2,1:2)=1;                   
                end
            elseif ( k==1 )
-               EFT_my_multi_thread(i,j,k)=99999;
+               EFT_my_multi_thread_min(i,j,k)=99999;
+               EFT_my_multi_thread_max(i,j,k)=99999;               
            end
            
            %-------------find min value for each set of diff_node, e.g. min value for i7, gpu etc
-            if ( EFT_my(i,j,k) < min_single(i,1) )
-                min_single(i,1)=EFT_my(i,j,k); min_single(i,2)=j;min_single(i,3)=k;
+            if ( EFT_my_min(i,j,k) < min_single(i,1) )
+                min_single(i,1)=EFT_my_min(i,j,k); min_single(i,2)=j;min_single(i,3)=k;min_single(i,4)=EFT_my_max(i,j,k);
             end
-            if ( EFT_my_multi_thread(i,j,k) < min_multi(i,1) ) 
-                min_multi(i,1)=EFT_my_multi_thread(i,j,k); min_multi(i,2)=j;min_multi(i,3)=k;
-                min_tmp(i,:)=tmp_avail_proc(i,j,:);
-                jei=j;
-            end
+            
+%             if ( EFT_my_multi_thread_min(i,j,k) < min_multi(i,1) ) 
+%                 min_multi(i,1)=EFT_my_multi_thread_min(i,j,k); min_multi(i,2)=j;min_multi(i,3)=k;
+%                 min_tmp(i,:)=tmp_avail_proc(i,j,:);
+%             end
+%             if ( EFT_my_multi_thread_max(i,j,k) < min_multi_MAX(i,1) ) 
+%                 min_multi_MAX(i,1)=EFT_my_multi_thread_max(i,j,k); min_multi_MAX(i,2)=j;min_multi_MAX(i,3)=k;
+%             end            
             
             %-----------
                
        else  
-               EFT_my(i,j,k)=99999;
-               EFT_my_multi_thread(i,j,k)=99999;
+               EFT_my_min(i,j,k)=99999;
+               EFT_my_max(i,j,k)=99999;               
+               EFT_my_multi_thread_min(i,j,k)=99999;
+               EFT_my_multi_thread_max(i,j,k)=99999;               
         end      
      end
     end
   end
 
+      %REDUCE THE SPACE FOR MULTI-THREAD ONES - discard the ones have larger min value than the max of the others
+      min_thread=ones(diff_nodes,common_nodes,max_cores);  %contains the remaining multi thread implementations 
+      %discard inefficient multicore ones, store the others
+         
+        for i=1:cpu_ref
+          for j=1:common_nodes
+            for k=2:max_cores 
+               if ( min_thread(i,j,k) ~= -1 ) 
+               tmp=EFT_my_multi_thread_max(i,j,k);
+                   for j2=1:common_nodes
+                      for k2=2:max_cores
+                          if ( ( tmp<=EFT_my_multi_thread_min(i,j2,k2) ) && ( (j~=j2) || (k~=k2) )  )
+                              min_thread(i,j2,k2)=-1;
+                          end
+                      end
+                   end
+               end
+            end
+          end
+        end
+        
+     %For the remaining mutli-thread ones select the one with min median value - the min average multithread EFT is stored to min_multi
+        for i=1:cpu_ref
+          median=ones(3,1);  median(1)=9999; 
+          for j=1:common_nodes
+            for k=2:max_cores  
+                if ( min_thread(i,j,k) ~= -1 )
+                    if ( (( EFT_my_multi_thread_min(i,j,k)+EFT_my_multi_thread_max(i,j,k) ) / 2 ) < median(1) )
+                        median(1)=EFT_my_multi_thread_min(i,j,k)+EFT_my_multi_thread_max(i,j,k) / 2;
+                        median(2)=j;
+                        median(3)=k;
+                    end
+                end
+            end
+          end
+          min_multi(i,2)=median(2);
+          min_multi(i,3)=median(3); 
+          min_multi(i,1)=EFT_my_multi_thread_min(i,median(2),median(3));
+          min_multi(i,4)=EFT_my_multi_thread_max(i,median(2),median(3));
+          min_tmp(i,:)=tmp_avail_proc(i,median(2),median(3),:);
+          jei=median(2);
+          %fprintf('\n k=%d, EFT=%d - %d %d %d %d %d %d',min_multi(i,3),min_multi(i,1),min_tmp(i,1),min_tmp(i,2),min_tmp(i,3),min_tmp(i,4),min_tmp(i,5),min_tmp(i,6));
+        end
+        
+      %fprintf('\n ind=%d, gpu, i7 %d %d',ind,min_single(4,1),min_multi(3,1));
+
+
+ 
       
        %find out which nodes to be emulated for task 'ind' - if emulations(i)==-1 no emulation is applied
        for it1=diff_nodes:-1:2
            for it2=(it1-1):-1:1
-               if ( min (min_single(it1,1), min_multi(it1,1)) <= min (min_single(it2,1), min_multi(it2,1)) )
+               if ( min (min_single(it1,4), min_multi(it1,4)) <= min (min_single(it2,1), min_multi(it2,1)) )
                    emulations(ind,it2)=-1;
                end
            end
        end
-       %emulations(ind,cpu_ref)=-1;
+       for it1=1:diff_nodes-1
+           for it2=it1+1:diff_nodes
+               if ( min (min_single(it1,4), min_multi(it1,4)) <= min (min_single(it2,1), min_multi(it2,1)) )
+                   emulations(ind,it2)=-1;
+               end
+           end
+       end
+       
+           
        
        flag=0;
        %find if at least one mutli-core node needs emulation
@@ -229,19 +337,20 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
           if (emulations(ind,it1) ~= -1)
               %emulate ind on this node
               em=em+1;
-              if (      (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1) ) < ex_min )
-                  ex_min=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1);
+              if (      (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1) ) < ex_min )
+                  ex_min=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1);
                   ex_ind=it1;
               end
           end
       end
       
-       output(ind,1)=ind; output(ind,2)=min_single(ex_ind,1)-ex_times(ind)/speedup(max_cores);output(ind,3)=ex_min; output(ind,4)=ex_ind;
+       output(ind,1)=ind; output(ind,2)=min_single(ex_ind,1)-ex_times(ind)*range(it1,1);output(ind,3)=ex_min; output(ind,4)=ex_ind;
        output(ind,5)=min_single(ex_ind,2); output(ind,6)=1; 
        output(ind,7)=0; output(ind,8)=0; output(ind,9)=0; output(ind,10)=0; output(ind,11)=0;output(ind,12)=0;
        avail_proc(ex_ind,min_single(ex_ind,2),min_single(ex_ind,3))=output(ind,3);
        list(ind)=-1;
        
+
 
        %update ready list
        ready(ind)=0; num_ready=num_ready-1;
@@ -264,18 +373,16 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
        
        
   else  %in this case there are candidate multi-core CPUS for selection 
+      
+
      
       %for the remaining candidate solutions find min EST  
       EST_min=99999;
       for it1=1:diff_nodes
           if ( emulations(ind,it1) ~= -1 )
               %find min EST 
-              if (it1>cpu_ref)
-                  EST1=min_single(it1,1)-ex_times(ind)/speedup(max_cores);
-              else
-                  EST1=min_single(it1,1)-ex_times(ind);
-              end
-              EST2=min_multi(it1,1) - ex_times(ind)/speedup(min_multi(it1,3));
+              EST1=min_single(it1,1)-ex_times(ind)*range(it1,1);
+              EST2=min_multi(it1,1) - (ex_times(ind)/speedup(min_multi(it1,3)))*range(it1,1);
               if ( min(EST1,EST2) < EST_min )
                   EST_min=min(EST1,EST2);
               end
@@ -296,7 +403,7 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
           end
       end
 
-
+%fprintf('\n %d %d',num_ready,num_available_nodes);
          if ( num_ready <= num_available_nodes ) %take the min EFT solution no matter on how many cores (is it likely to use 1-thread?)
                
               %find the fastest node for the current task
@@ -308,7 +415,7 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                       if ( min_multi(it1,1) < min_single(it1,1) )
                          %emulate it and compare to the others
                          em=em+1;
-                         tmp=min_multi(it1,1)-ex_times(ind)/speedup(min_multi(it1,3)) + D(ind,it1,min_multi(it1,3));
+                         tmp=min_multi(it1,1)-(ex_times(ind)/speedup(min_multi(it1,3)))*range(it1,1) + D(ind,it1,min_multi(it1,3));
                          if ( tmp < ex_min1)
                          ex_min1=tmp;
                          ex_ind1=it1;
@@ -316,21 +423,12 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                          
                       else
                           
-                         if (it1>cpu_ref) 
                            %emulate it and compare to the others
                            em=em+1;
-                           if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1) ) < ex_min2)
-                           ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1);
+                           if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1) ) < ex_min2)
+                           ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1);
                            ex_ind2=it1;
                            end
-                         else
-                           %emulate it and compare to the others
-                           em=em+1;
-                           if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                           ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
-                           ex_ind2=it1;
-                           end
-                         end
 
                       end
 
@@ -339,7 +437,7 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
               
               if (ex_min1 < ex_min2) % if the multithread is fastest
                   
-                   output(ind,1)=ind; output(ind,2)=min_multi(ex_ind1,1)-ex_times(ind)/speedup(min_multi(ex_ind1,3));output(ind,3)=ex_min1; output(ind,4)=ex_ind1;
+                   output(ind,1)=ind; output(ind,2)=min_multi(ex_ind1,1)-(ex_times(ind)/speedup(min_multi(ex_ind1,3)))*range(ex_ind1,1);output(ind,3)=ex_min1; output(ind,4)=ex_ind1;
                    output(ind,5)=min_multi(ex_ind1,2); output(ind,6)=min_multi(ex_ind1,3); 
                    output(ind,7)=min_tmp(ex_ind1,1); output(ind,8)=min_tmp(ex_ind1,2); output(ind,9)=min_tmp(ex_ind1,3); 
                    output(ind,10)=min_tmp(ex_ind1,4); output(ind,11)=min_tmp(ex_ind1,5); output(ind,12)=min_tmp(ex_ind1,6);
@@ -350,21 +448,20 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                             avail_proc(ex_ind1,min_multi(ex_ind1,2),it3)=min_tmp(ex_ind1,it3);
                        end
                    end
+
                       
                    list(ind)=-1;
                    
               else
-                  if (ex_ind2 > cpu_ref) % if the node is gpu of fpga
-                      output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)/speedup(max_cores);
-                  else
-                      output(ind,2)=min_single(ex_ind2,1)-ex_times(ind);
-                  end
+                   output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)*range(ex_ind2,1);
                    output(ind,1)=ind; output(ind,3)=ex_min2; output(ind,4)=ex_ind2;
                    output(ind,5)=min_single(ex_ind2,2); output(ind,6)=1; 
                    output(ind,7)=0; output(ind,8)=0; output(ind,9)=0; output(ind,10)=0; output(ind,11)=0;output(ind,12)=0;
                    tt=min_single(ex_ind2,3); output(ind,6+tt)=1;
                    avail_proc(ex_ind2,min_single(ex_ind2,2),min_single(ex_ind2,3))=output(ind,3);
                    list(ind)=-1;
+                   
+                   
               end
                %update ready list
                ready(ind)=0; num_ready=num_ready-1;
@@ -416,7 +513,7 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                            end
                     em=em+1;
                     factor=ex_times(ind) / D(ind,cpu_ref,f) ; 
-      % fprintf('\n (ind, f, factor, speedup) - (%d,  %d  %f  %f)',ind, f, factor, speedup(f) );
+       %fprintf('\n (ind, f, factor, sppedup) - (%d,  %d  %f  %f)',ind, f, factor, speedup(f) );
       
                     if ( factor >= speedup(f) ) %if core utilization factor is large enough
                       % a) update EFT of the remaining solutions -analoga me to utiliz factor sta f cores tou cpu_ref, generate ta alla
@@ -425,21 +522,31 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                             for ii=1:diff_nodes
                                 newfactor(ii) = (min_multi(ii,3)*factor) / f;
                                 if ( min_multi(ii,1) ~= 99999 )
-                                min_multi(ii,1)=min_multi(ii,1)-ex_times(ind)/speedup(min_multi(ii,3)) + ex_times(ind)/newfactor(ii);                                
+                                min_multi(ii,1)=min_multi(ii,1)-(ex_times(ind)/speedup(min_multi(ii,3)))*range(ii,1) + ex_times(ind)/newfactor(ii)*range(ii,1);                                
+                                min_multi(ii,4)=min_multi(ii,4)-(ex_times(ind)/speedup(min_multi(ii,3)))*range(ii,2) + ex_times(ind)/newfactor(ii)*range(ii,2);                                                                
                                 end
                             end
 
-                            emulations(ind,:)=0;
+
+                           emulations(ind,:)=0; 
                            %find out which nodes to be emulated for task 'ind' - if emulations(i)==-1 no emulation is applied
                            for it1=diff_nodes:-1:2
                                for it2=(it1-1):-1:1
-                                   if ( min (min_single(it1,1), min_multi(it1,1)) <= min (min_single(it2,1), min_multi(it2,1)) )
+                                   if ( min (min_single(it1,4), min_multi(it1,4)) <= min (min_single(it2,1), min_multi(it2,1)) )
                                        emulations(ind,it2)=-1;
                                    end
                                end
                            end
-                           %emulations(ind,cpu_ref)=-1;
+                           for it1=1:diff_nodes-1
+                               for it2=it1+1:diff_nodes
+                                   if ( min (min_single(it1,4), min_multi(it1,4)) <= min (min_single(it2,1), min_multi(it2,1)) )
+                                       emulations(ind,it2)=-1;
+                                   end
+                               end
+                           end
                         
+
+       
                       % b) emulate remaining solutions to find the best
                                     %find the fastest node for the current task
                               ex_min1=99999;
@@ -449,26 +556,19 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                       %find implementation with min EFT on than node
                                       if ( min_multi(it1,1) < min_single(it1,1) )
                                          %emulate it and compare to the others
-                                         tmp=min_multi(it1,1)-ex_times(ind)/newfactor(it1) + D(ind,it1,min_multi(it1,3));
+                                         tmp=min_multi(it1,1)-(ex_times(ind)/newfactor(it1))*range(it1,1) + D(ind,it1,min_multi(it1,3));
                                          if ( tmp < ex_min1)
                                          ex_min1=tmp;
                                          ex_ind1=it1;
                                          end
 
                                       else
-                                          if (it1>cpu_ref)
+
                                             %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3));
+                                            if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
+                                            ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3));
                                             ex_ind2=it1;
                                             end
-                                          else
-                                            %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
-                                            ex_ind2=it1;
-                                            end
-                                          end
 
                                       end
                                       
@@ -481,7 +581,7 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
 
                               if (ex_min1 < ex_min2) % if the multithread is fastest
              
-                                   output(ind,1)=ind; output(ind,2)=min_multi(ex_ind1,1)-ex_times(ind)/newfactor(ex_ind1);output(ind,3)=ex_min1; output(ind,4)=ex_ind1;
+                                   output(ind,1)=ind; output(ind,2)=min_multi(ex_ind1,1)-(ex_times(ind)/newfactor(ex_ind1))*range(ex_ind1,1);output(ind,3)=ex_min1; output(ind,4)=ex_ind1;
                                    output(ind,5)=min_multi(ex_ind1,2); output(ind,6)=min_multi(ex_ind1,3); 
                                    output(ind,7)=min_tmp(ex_ind1,1); output(ind,8)=min_tmp(ex_ind1,2); output(ind,9)=min_tmp(ex_ind1,3); 
                                    output(ind,10)=min_tmp(ex_ind1,4); output(ind,11)=min_tmp(ex_ind1,5); output(ind,12)=min_tmp(ex_ind1,6);
@@ -492,20 +592,19 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                             avail_proc(ex_ind1,min_multi(ex_ind1,2),it3)=min_tmp(ex_ind1,it3);
                                        end
                                    end
+                                      
                    
                                    list(ind)=-1;
                               else
-                                   if (ex_ind2 > cpu_ref) % if the node is gpu of fpga
-                                        output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)/speedup(max_cores);
-                                   else
-                                         output(ind,2)=min_single(ex_ind2,1)-ex_times(ind);
-                                   end                                  
+                                        output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)*range(ex_ind2,1);
+                              
                                    output(ind,1)=ind; output(ind,3)=ex_min2; output(ind,4)=ex_ind2;
                                    output(ind,5)=min_single(ex_ind2,2); output(ind,6)=1; 
                                    output(ind,7)=0; output(ind,8)=0; output(ind,9)=0; output(ind,10)=0; output(ind,11)=0;output(ind,12)=0;
                                    tt=min_single(ex_ind2,3); output(ind,6+tt)=1;
                                    avail_proc(ex_ind2,min_single(ex_ind2,2),min_single(ex_ind2,3))=output(ind,3);
                                    list(ind)=-1;
+
                               end
                                %update ready list
                                ready(ind)=0; num_ready=num_ready-1;
@@ -531,7 +630,7 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                         em=em+1;
                         f2=ceil(f/2);
                         factor=ex_times(ind) / D(ind,cpu_ref,f2) ;
-       %fprintf('\n (ind, f, factor, speedup) - (%d,  %d  %f  %f) -- %d',ind, f2, factor, speedup(f2),f );
+       %fprintf('\n (ind, f, factor, sppedup) - (%d,  %d  %f  %f)',ind, f2, factor, speedup(f2) );
                         
                         if ( factor >= speedup(f2) ) %if core utilization factor for f/2 is large, node is faced as f/2-thread set F=(f/2)/max_cores.
                            % the nodes have a larger F value reduce their # of cores, the other ones do not
@@ -551,14 +650,12 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                 new_thr= min( f2, cntt ) ; %the number of threads used for the new implementation, e.g., from 5 to 3
                                 newfactor(ii) = ( new_thr * factor) / f2;
                                 if ( min_multi(ii,1) ~= 99999 )
-                                min_multi(ii,1)=min_multi(ii,1)-ex_times(ind)/speedup(min_multi(ii,3)) + ex_times(ind)/newfactor(ii);
+                                min_multi(ii,1)=min_multi(ii,1)-(ex_times(ind)/speedup(min_multi(ii,3)))*range(ii,1) + (ex_times(ind)/newfactor(ii))*range(ii,1);
+                                min_multi(ii,4)=min_multi(ii,4)-(ex_times(ind)/speedup(min_multi(ii,3)))*range(ii,2) + (ex_times(ind)/newfactor(ii))*range(ii,2);                                
                                 min_multi(ii,3)=new_thr;
                                 end
-                                
-                                %find out which node has the min EFT_my_multi_thread(i,j,k)
-                                %[pfs,n1]=min(EFT_my_multi_thread(ii,:,cntt));
 
-                                %The # of threads is reduced 
+
                                 first_time=1;
                                 gr=zeros(1,cntt);
                                 gr(1,:)=avail_proc(ii,jei,1:cntt);
@@ -582,17 +679,26 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                 end
                            end
 
-                             emulations(ind,:)=0;
-                           %find out which nodes to be emulated for task 'ind' - if emulations(i)==-1 no emulation is applied
-                           for it1=diff_nodes:-1:2
-                               for it2=(it1-1):-1:1
-                                   if ( min (min_single(it1,1), min_multi(it1,1)) <= min (min_single(it2,1), min_multi(it2,1)) )
-                                       emulations(ind,it2)=-1;
+                    
+                                emulations(ind,:)=0; 
+                               %find out which nodes to be emulated for task 'ind' - if emulations(i)==-1 no emulation is applied
+                               for it1=diff_nodes:-1:2
+                                   for it2=(it1-1):-1:1
+                                       if ( min (min_single(it1,4), min_multi(it1,4)) <= min (min_single(it2,1), min_multi(it2,1)) )
+                                           emulations(ind,it2)=-1;
+                                       end
                                    end
                                end
-                           end
-                           %emulations(ind,cpu_ref)=-1;
-                           
+                               for it1=1:diff_nodes-1
+                                   for it2=it1+1:diff_nodes
+                                       if ( min (min_single(it1,4), min_multi(it1,4)) <= min (min_single(it2,1), min_multi(it2,1)) )
+                                           emulations(ind,it2)=-1;
+                                       end
+                                   end
+                               end
+                                
+ 
+
                              % b) emulate remaining solutions to find the best
                                     %find the fastest node for the current task
                               ex_min1=99999;
@@ -602,7 +708,7 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                       %find implementation with min EFT on than node
                                       if ( min_multi(it1,1) < min_single(it1,1) )
                                          %emulate it and compare to the others
-                                         tmp=min_multi(it1,1)-ex_times(ind)/newfactor(it1) + D(ind,it1,min_multi(it1,3));
+                                         tmp=min_multi(it1,1)-(ex_times(ind)/newfactor(it1))*range(it1,1) + D(ind,it1,min_multi(it1,3));
                                          if ( tmp < ex_min1)
                                          ex_min1=tmp;
                                          ex_ind1=it1;
@@ -610,19 +716,11 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
 
                                       else
                                           
-                                        if (it1>cpu_ref)
                                             %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3));
+                                            if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
+                                            ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3));
                                             ex_ind2=it1;
                                             end
-                                        else
-                                            %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
-                                            ex_ind2=it1;
-                                            end
-                                        end
 
                                       end
                                       
@@ -635,7 +733,7 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
 
                               if (ex_min1 < ex_min2) % if the multithread is fastest
 
-                                   output(ind,1)=ind; output(ind,2)=min_multi(ex_ind1,1)-ex_times(ind)/newfactor(ex_ind1);output(ind,3)=ex_min1; output(ind,4)=ex_ind1;
+                                   output(ind,1)=ind; output(ind,2)=min_multi(ex_ind1,1)-(ex_times(ind)/newfactor(ex_ind1))*range(ex_ind1,1);output(ind,3)=ex_min1; output(ind,4)=ex_ind1;
                                    output(ind,5)=min_multi(ex_ind1,2); output(ind,6)=min_multi(ex_ind1,3); 
                                    output(ind,7)=min_tmp(ex_ind1,1); output(ind,8)=min_tmp(ex_ind1,2); output(ind,9)=min_tmp(ex_ind1,3); 
                                    output(ind,10)=min_tmp(ex_ind1,4); output(ind,11)=min_tmp(ex_ind1,5); output(ind,12)=min_tmp(ex_ind1,6);
@@ -647,19 +745,19 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                        end
                                    end                                   
                                    list(ind)=-1;
-                                   
+        %fprintf('\n ind %d - %d %d %d %d %d %d',ind,min_tmp(ex_ind1,1),min_tmp(ex_ind1,2),min_tmp(ex_ind1,3),min_tmp(ex_ind1,4),min_tmp(ex_ind1,5),min_tmp(ex_ind1,6));
+
+                                      
                               else
-                                   if (ex_ind2 > cpu_ref) % if the node is gpu of fpga
-                                        output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)/speedup(max_cores);
-                                   else
-                                         output(ind,2)=min_single(ex_ind2,1)-ex_times(ind);
-                                   end                                  
+                                        output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)*range(ex_ind2,1);
+                                    
                                    output(ind,1)=ind; output(ind,3)=ex_min2; output(ind,4)=ex_ind2;
                                    output(ind,5)=min_single(ex_ind2,2); output(ind,6)=1; 
                                    output(ind,7)=0; output(ind,8)=0; output(ind,9)=0; output(ind,10)=0; output(ind,11)=0;output(ind,12)=0;
                                    tt=min_single(ex_ind2,3); output(ind,6+tt)=1;
                                    avail_proc(ex_ind2,min_single(ex_ind2,2),min_single(ex_ind2,3))=output(ind,3);
                                    list(ind)=-1;
+                                   
                               end
                                %update ready list
                                ready(ind)=0; num_ready=num_ready-1;
@@ -688,17 +786,11 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                      if (emulations(ind,it1) ~= -1)
                                           %find implementation with min EFT on than node
                                              %emulate it and compare to the others
-                                          if (it1>cpu_ref)   
-                                             if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores)  + D(ind,it1,min_single(it1,3));
+                                             if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
+                                             ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1)  + D(ind,it1,min_single(it1,3));
                                              ex_ind2=it1;
                                              end
-                                          else
-                                             if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
-                                             ex_ind2=it1;
-                                             end
-                                          end
+
                                           if (it1 ~= cpu_ref) %the case that it1==cpu_ref is counted above
                                             em=em+1;
                                           end
@@ -706,17 +798,15 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                       end
                                   end
 
-                                  if (ex_ind2 > cpu_ref) % if the node is gpu of fpga
-                                        output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)/speedup(max_cores);
-                                   else
-                                         output(ind,2)=min_single(ex_ind2,1)-ex_times(ind);
-                                   end
+                                        output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)*range(ex_ind2,1);
+
                                        output(ind,1)=ind; output(ind,3)=ex_min2; output(ind,4)=ex_ind2;
                                        output(ind,5)=min_single(ex_ind2,2); output(ind,6)=1; 
                                        output(ind,7)=0; output(ind,8)=0; output(ind,9)=0; output(ind,10)=0; output(ind,11)=0;output(ind,12)=0;
                                        tt=min_single(ex_ind2,3); output(ind,6+tt)=1;
                                        avail_proc(ex_ind2,min_single(ex_ind2,2),min_single(ex_ind2,3))=output(ind,3);
                                        list(ind)=-1;
+                   %fprintf('\n ind %d - %d %d ',ind,min_single(ex_ind2,2),min_single(ex_ind2,3));
                                  
                                        %update ready list
                                        ready(ind)=0; num_ready=num_ready-1;
@@ -747,28 +837,17 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                   for it1=1:diff_nodes
                                      if (emulations(ind,it1) ~= -1)
                                           %find implementation with min EFT on than node
-                                             %emulate it and compare to the others
-                                          if (it1>cpu_ref)   
+                                             %emulate it and compare to the others 
                                              em=em+1;
-                                             if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3));
+                                             if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
+                                             ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3));
                                              ex_ind2=it1;
                                              end
-                                          else
-                                             em=em+1;
-                                             if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
-                                             ex_ind2=it1;
-                                             end
-                                          end
                                       end
                                   end
 
-                                   if (ex_ind2 > cpu_ref) % if the node is gpu of fpga
-                                        output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)/speedup(max_cores);
-                                   else
-                                         output(ind,2)=min_single(ex_ind2,1)-ex_times(ind);
-                                   end
+                                        output(ind,2)=min_single(ex_ind2,1)-ex_times(ind)*range(ex_ind2,1);
+   
                                        output(ind,1)=ind; output(ind,3)=ex_min2; output(ind,4)=ex_ind2;
                                        output(ind,5)=min_single(ex_ind2,2); output(ind,6)=1; 
                                        output(ind,7)=0; output(ind,8)=0; output(ind,9)=0; output(ind,10)=0; output(ind,11)=0;output(ind,12)=0;
@@ -866,10 +945,5 @@ for i=1:diff_nodes
     end
 end
 
-fprintf('\n Proposed - makespan=%f, speedup=%f, efficiency=%f, SLR=%f',makespan,speedup,speedup/(total_num_cores_nodes),makespan/cp );
+fprintf('\n Proposed2 - makespan=%f, speedup=%f, efficiency=%f, SLR=%f',makespan,speedup,speedup/(total_num_cores_nodes),makespan/cp );
 fprintf('\n          - # of emulations %d / %d - x%f less emulations\n',em,def_em*(tasks-1),def_em*(tasks-1)/em );
-
-          
-
-
-

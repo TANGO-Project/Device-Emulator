@@ -9,7 +9,7 @@ clear
  
  % the higher the Heterogenity the more the gain of my2
  % the more the T values differ the more the gain of my2
- %[output_my3,emulations_my3]=my3(A,D,HW,cpu_ref,range);
+ [output_my2,emulations_my2]=my2(A,D,HW,cpu_ref,range);
 
  
 

@@ -1,3 +1,5 @@
+%./daggen --dot -n 50 --fat 0.5 --jump 2 --density 0.7 --regular 0.3 --ccr 0.1 --mindata 1 --maxdata 9999 >px.txt
+
 % PLEASE SPECIFY THE FOLLOWING
 %HW_infrastracture, tasks, Heterog, Wmean, range, & pointers to CCR, betaw, betac & input file name
 
@@ -12,14 +14,14 @@ diff_nodes=4;
 common_nodes=3;
 max_cores=6;
 HW_infrastracture=zeros(diff_nodes,common_nodes,2); % (# of diff nodes, # of max common nodes, # of max cores in a node)
-HW_infrastracture(:,:,1)= [1 1 1; 1 1 0; 1 1 0; 1 0 0]; % in the left are the slow processors. '0' means that node is not available - (arm,i5,i7,gpu)
+HW_infrastracture(:,:,1)= [1 1 1; 1 1 0; 1 1 0; 1 1 0]; % in the left are the slow processors. '0' means that node is not available - (arm,i5,i7,gpu)
 HW_infrastracture(:,:,2)= [1 1 1; 1 1 0; 1 1 0; 0 0 0]; % # of cores each node contains
 HW_infrastracture(:,:,3)= [0 0 0; 1 1 0; 1 1 0; 0 0 0];
 HW_infrastracture(:,:,4)= [0 0 0; 1 1 0; 1 1 0; 0 0 0];
 HW_infrastracture(:,:,5)= [0 0 0; 0 0 0; 1 1 0; 0 0 0];
 HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 1 1 0; 0 0 0];
 
-range=[2 2.5 ; 1.2 1.5 ; 1 1 ; 0.034 0.16]; % value range of tasks on different nodes - 1thread implementations or GPU
+range=[2 2.5 ; 1.2 1.5 ; 1 1 ; 0.034 0.2]; % value range of tasks on different nodes - 1thread implementations or GPU
 
 tasks=50; % # of tasks
 CCR=[0.1 0.5 0.8 1 2 5 10]; % communication/computation value ratio
