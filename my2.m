@@ -565,8 +565,8 @@ min_tmp=zeros(diff_nodes,max_cores);
                                       else
 
                                             %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3));
+                                            if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1) ) < ex_min2)
+                                            ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1);
                                             ex_ind2=it1;
                                             end
 
@@ -717,8 +717,8 @@ min_tmp=zeros(diff_nodes,max_cores);
                                       else
                                           
                                             %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3));
+                                            if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1) ) < ex_min2)
+                                            ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1);
                                             ex_ind2=it1;
                                             end
 
@@ -786,8 +786,8 @@ min_tmp=zeros(diff_nodes,max_cores);
                                      if (emulations(ind,it1) ~= -1)
                                           %find implementation with min EFT on than node
                                              %emulate it and compare to the others
-                                             if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1)  + D(ind,it1,min_single(it1,3));
+                                             if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1) ) < ex_min2)
+                                             ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1)  + D(ind,it1,1);
                                              ex_ind2=it1;
                                              end
 
@@ -839,8 +839,8 @@ min_tmp=zeros(diff_nodes,max_cores);
                                           %find implementation with min EFT on than node
                                              %emulate it and compare to the others 
                                              em=em+1;
-                                             if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,min_single(it1,3));
+                                             if (   (min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1) ) < ex_min2)
+                                             ex_min2=min_single(it1,1)-ex_times(ind)*range(it1,1) + D(ind,it1,1);
                                              ex_ind2=it1;
                                              end
                                       end
@@ -886,8 +886,8 @@ min_tmp=zeros(diff_nodes,max_cores);
    clear min_single;
   clear min_multi;
   clear EFT_my;
-clear EFT_my_multi_thread;
-clear EFT_my;
+clear EFT_my_multi_thread_min EFT_my_multi_thread_max;
+clear EFT_my_min EFT_my_max tmp_avail_proc min_tmp;
 
 end
        

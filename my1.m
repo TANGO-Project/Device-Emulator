@@ -326,8 +326,8 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                          else
                            %emulate it and compare to the others
                            em=em+1;
-                           if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                           ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
+                           if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,1) ) < ex_min2)
+                           ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,1);
                            ex_ind2=it1;
                            end
                          end
@@ -458,14 +458,14 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                       else
                                           if (it1>cpu_ref)
                                             %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3));
+                                            if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1) ) < ex_min2)
+                                            ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1);
                                             ex_ind2=it1;
                                             end
                                           else
                                             %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
+                                            if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,1) ) < ex_min2)
+                                            ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,1);
                                             ex_ind2=it1;
                                             end
                                           end
@@ -612,14 +612,14 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                           
                                         if (it1>cpu_ref)
                                             %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3));
+                                            if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1) ) < ex_min2)
+                                            ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1);
                                             ex_ind2=it1;
                                             end
                                         else
                                             %emulate it and compare to the others
-                                            if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                            ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
+                                            if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,1) ) < ex_min2)
+                                            ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,1);
                                             ex_ind2=it1;
                                             end
                                         end
@@ -689,13 +689,13 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                           %find implementation with min EFT on than node
                                              %emulate it and compare to the others
                                           if (it1>cpu_ref)   
-                                             if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores)  + D(ind,it1,min_single(it1,3));
+                                             if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1) ) < ex_min2)
+                                             ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores)  + D(ind,it1,1);
                                              ex_ind2=it1;
                                              end
                                           else
-                                             if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
+                                             if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,1) ) < ex_min2)
+                                             ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,1);
                                              ex_ind2=it1;
                                              end
                                           end
@@ -750,14 +750,14 @@ tmp_avail_proc=zeros(diff_nodes,common_nodes,max_cores);
                                              %emulate it and compare to the others
                                           if (it1>cpu_ref)   
                                              em=em+1;
-                                             if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,min_single(it1,3));
+                                             if (   (min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1) ) < ex_min2)
+                                             ex_min2=min_single(it1,1)-ex_times(ind)/speedup(max_cores) + D(ind,it1,1);
                                              ex_ind2=it1;
                                              end
                                           else
                                              em=em+1;
-                                             if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3)) ) < ex_min2)
-                                             ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,min_single(it1,3));
+                                             if (   (min_single(it1,1)-ex_times(ind) + D(ind,it1,1) ) < ex_min2)
+                                             ex_min2=min_single(it1,1)-ex_times(ind) + D(ind,it1,1);
                                              ex_ind2=it1;
                                              end
                                           end
