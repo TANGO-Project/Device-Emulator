@@ -8,12 +8,12 @@
 %TO DO 1: add user network topology. in this case, edge values refer to commun speed 1. I can add commun speed 2,3 etc
 %TO DO 2: slack
 
-function [A,D,range,HW_infrastracture,cpu_ref] = input_graphs()
+function [A,D,range,HW_infrastracture,cpu_ref] = input_graphs(filename)
 
 diff_nodes=4;
 common_nodes=3;
 max_cores=6;
-HW_infrastracture=zeros(diff_nodes,common_nodes,2); % (# of diff nodes, # of max common nodes, # of max cores in a node)
+HW_infrastracture=zeros(diff_nodes,common_nodes,max_cores); % (# of diff nodes, # of max common nodes, # of max cores in a node)
 HW_infrastracture(:,:,1)= [1 1 1; 1 1 0; 1 1 0; 1 1 0]; % in the left are the slow processors. '0' means that node is not available - (arm,i5,i7,gpu)
 HW_infrastracture(:,:,2)= [1 1 1; 1 1 0; 1 1 0; 0 0 0]; % # of cores each node contains
 HW_infrastracture(:,:,3)= [0 0 0; 1 1 0; 1 1 0; 0 0 0];
@@ -23,7 +23,7 @@ HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 1 1 0; 0 0 0];
 
 range=[2 2.5 ; 1.2 1.5 ; 1 1 ; 0.034 0.2]; % value range of tasks on different nodes - 1thread implementations or GPU
 
-tasks=50; % # of tasks
+tasks=100; % # of tasks
 CCR=[0.1 0.5 0.8 1 2 5 10]; % communication/computation value ratio
 betaw=[0.5 1 2 3]; %range of task values in application - 1 node
 betac=[0.5 1 2 3]; %range of edge values in application - Heterogeneity
@@ -91,11 +91,12 @@ end
 
 
 
-
 % ----------------get from daggen the DAG without label values------------------
 %-----------------------------------------------------------
 
-fid  = fopen('px.txt','r');
+%fid  = fopen('px.txt','r');
+%fid  = fopen('/usr/not-backed-up/PhD-postdoc/task_mapping/codes/multithreading/DAGs/50/62.txt','r');
+fid  = fopen(filename,'r');
 text = textscan(fid,'%s','Delimiter','','endofline','');
 text = text{1}{1};
 fid  = fclose(fid);
@@ -153,6 +154,6 @@ for i=1:tasks
     end
 end
 
-h = view(biograph(A,[],'ShowWeights','on'))
+%h = view(biograph(A,[],'ShowWeights','on'))
 
 

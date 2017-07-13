@@ -1,9 +1,12 @@
-%an vgalei error exw valei sxolio sti 557 kai 'jei' adaytou sti 562 
 
-function  [output,emulations] = my1 (A,D,HW,cpu_ref)
+
+function  [output,emulations,makespan,slr,em] = my1 (A,D,HW,cpu_ref)
 
 
 [tasks,diff_nodes,max_cores]=size(D);
+
+rank_u=zeros(tasks,1);
+rank_u2=zeros(tasks,1);
 
 ex_times=D(:,cpu_ref,1);
 em=0;
@@ -822,7 +825,7 @@ em=em+tasks-1;% # of emulations
 
  
  makespan=output(sink,3);
- speedup=sum(D(:,diff_nodes)) / makespan; % sum of the fastest node
+ speed_up=sum(D(:,diff_nodes)) / makespan; % sum of the fastest node
  
  %calculate Critical Path on the fastest node
 rank_u2(tasks)=D(tasks,diff_nodes,1);
@@ -830,15 +833,16 @@ for t=tasks-1:-1:1
     maxx=0;
     for j=t:tasks
         if (A(t,j)~=0)
-            if ( maxx< ( rank_u2(j)+A(t,j) ) )
-                maxx=rank_u2(j)+A(t,j);
+            if ( maxx< ( rank_u2(j) ) )
+                maxx=rank_u2(j);
             end
         end
-    rank_u2(t)=maxx+mean(D(t,diff_nodes,1));   
+    rank_u2(t)=maxx+D(t,diff_nodes,1);   
     end
 end
 cp=max(rank_u2);
 
+slr=makespan/cp;
 
 %compute total # of emulations needed - WITHOUT USING THIS METHOD
 def_em=0;
@@ -866,7 +870,7 @@ for i=1:diff_nodes
     end
 end
 
-fprintf('\n Proposed - makespan=%f, speedup=%f, efficiency=%f, SLR=%f',makespan,speedup,speedup/(total_num_cores_nodes),makespan/cp );
+fprintf('\n Proposed - makespan=%f, speedup=%f, efficiency=%f, SLR=%f',makespan,speed_up,speed_up/(total_num_cores_nodes),slr );
 fprintf('\n          - # of emulations %d / %d - x%f less emulations\n',em,def_em*(tasks-1),def_em*(tasks-1)/em );
 
           
