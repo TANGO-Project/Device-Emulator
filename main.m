@@ -5,7 +5,7 @@ clear
 utilization2=zeros(9,6);
 utilization3=zeros(9,6);
 
-THRESHOLD=6; %this value depends on the number of the nodes
+THRESHOLD=14; %this value depends on the number of the nodes
 
 diff_DAGs=81;
 
@@ -16,7 +16,7 @@ for j=1:3
     for m=1:3
        for n=1:3
     
- filename=sprintf('/usr/not-backed-up/PhD-postdoc/task_mapping/codes/multithreading_ver3/DAGs/300/%d.txt',cnt);
+ filename=sprintf('/usr/not-backed-up/PhD-postdoc/task_mapping/codes/multithreading_ver3/DAGs/200/%d.txt',cnt);
     
  [A,D,range,HW,cpu_ref,tasks]=input_graphs(filename);
 

@@ -33,4 +33,5 @@ OUTPUT
      6th column gives the number of the threads of that task 
      columns 7-12 specify which core is active during the execution of the current task
   c) 'emulations_myX' specifies which nodes are emulated for each task
+  d) 'utilizationX' shows the percetage (%) of each node's/core's usage
 
