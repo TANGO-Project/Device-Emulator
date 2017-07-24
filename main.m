@@ -2,6 +2,10 @@
 
 
 clear
+utilization2=zeros(9,6);
+utilization3=zeros(9,6);
+
+THRESHOLD=6; %this value depends on the number of the nodes
 
 diff_DAGs=81;
 
@@ -12,40 +16,33 @@ for j=1:3
     for m=1:3
        for n=1:3
     
- filename=sprintf('/usr/not-backed-up/PhD-postdoc/task_mapping/codes/multithreading/DAGs/300/%d.txt',cnt);
+ filename=sprintf('/usr/not-backed-up/PhD-postdoc/task_mapping/codes/multithreading_ver3/DAGs/300/%d.txt',cnt);
     
- [A,D,range,HW,cpu_ref]=input_graphs(filename);
+ [A,D,range,HW,cpu_ref,tasks]=input_graphs(filename);
 
-  [output_heft_single,makespan1,slr1x] = HEFT_single(A,D,HW,cpu_ref);
-  [output_heft_multi,makespan2,slr2y] = HEFT_multi(A,D,HW,cpu_ref);
+  [output_heft_single,makespan1,slr1] = HEFT_single(A,D,HW,cpu_ref);
+  [output_heft_multi,makespan2,slr2] = HEFT_multi(A,D,HW,cpu_ref);
  
- %[output_my1,emulations_my1,makespan3,slr3,em1] = my1(A,D,HW,cpu_ref,1.2);
  
- [output_my1bx,emulations_my1bx,makespan3,slr1,em1] = my_alg1 (A,D,HW,cpu_ref,1.3,16);
+ %[output_my1,emulations_my1,makespan3,slr3,em3] = my_alg1 (A,D,HW,cpu_ref,1.3,THRESHOLD);
  
- [output_my1bc,emulations_my1bc,makespan4,slr2,em2] = my_alg2 (A,D,HW,cpu_ref,range,1.3,16);
+ [output_my2,emulations_my2,makespan3,slr3,em3,util,less_em] = my_alg1b (A,D,HW,cpu_ref,1.3,THRESHOLD);
+ utilization2=utilization2+util;
  
-%  [output_my1bs,emulations_my1bs,makespan5,slr3,em3] = my_alg1 (A,D,HW,cpu_ref,1.3,6);
-%  
-%  [output_my1b,emulations_my1b,makespan6,slr4,em4] = my_alg1 (A,D,HW,cpu_ref,1.3,7);
-%  
-%  [output_my1c,emulations_my1c,makespan7,slr5,em5] = my_alg1 (A,D,HW,cpu_ref,1.3,8);
-%  
-%  [output_my1d,emulations_my1d,makespan8,slr6,em6] = my_alg1 (A,D,HW,cpu_ref,1.3,16);
+ %[output_my3,emulations_my3,makespan5,slr5,em5] = my_alg2 (A,D,HW,cpu_ref,range,1.3,THRESHOLD);
  
- %[output_my1_b,emulations_my1_b,makespan4,slr4,em2] = my1_b(A,D,HW,cpu_ref,range);
- 
- % [output_my1_d,emulations_my1_d,makespan5,slr5,em3] = my1_d(A,D,HW,cpu_ref,range);
+  [output_my4,emulations_my4,makespan4,slr4,em4,util,less_em2] = my_alg2b (A,D,HW,cpu_ref,range,1.3,THRESHOLD);
+utilization3=utilization3+util;
 
- %[output_my2,emulations_my2,makespan5,slr5,em3] = my2(A,D,HW,cpu_ref,range);
+ Results(cnt,1)=slr1; Results(cnt,2)=slr2; Results(cnt,3)=slr3; 
+ Results(cnt,4)=slr4; %Results(cnt,5)=slr5; Results(cnt,6)=slr6; 
  
- %[output_my2b,emulations_my2b,makespan5b,slr5b,em3b] = my2_b(A,D,HW,cpu_ref,range);
-
- Results(cnt,1)=makespan1; Results(cnt,2)=makespan2; Results(cnt,3)=makespan3; 
- Results(cnt,4)=makespan4; %Results(cnt,5)=makespan5; Results(cnt,6)=makespan6; 
+ Results(cnt,5)=makespan1; Results(cnt,6)=makespan2; Results(cnt,7)=makespan3; Results(cnt,8)=makespan4; 
+ %Results(cnt,15)=makespan5; Results(cnt,16)=makespan6; 
  
- %Results(cnt,7)=makespan7; Results(cnt,8)=makespan8; 
- Results(cnt,9)=em1; Results(cnt,10)=em2; %Results(cnt,11)=em3; Results(cnt,12)=em4; Results(cnt,13)=em5; Results(cnt,14)=em6; 
+ Results(cnt,9)=em3; Results(cnt,10)=em4; % Results(cnt,9)=em5; Results(cnt,10)=em6; Results(cnt,13)=em5; Results(cnt,14)=em6; 
+ Results(cnt,11)=less_em; Results(cnt,12)=less_em2;
+ 
   cnt=cnt+1;
   
        end 
@@ -53,51 +50,46 @@ for j=1:3
   end   
 end
 
-% aa=zeros(6,1);
-% aa(1)=mean(Results(:,3));
-% aa(2)=mean(Results(:,4));
-% aa(3)=mean(Results(:,5));
-% aa(4)=mean(Results(:,6));
-% aa(5)=mean(Results(:,7));
-% aa(6)=mean(Results(:,8));
-% [s1,s2]=min(aa)
 
 figure
-plot(Results(1:81,1),'-r+')
+semilogy(Results(1:81,1),'-k+')
 hold on
-plot(Results(1:81,2),'-r*')
+semilogy(Results(1:81,2),'-k*')
 hold on
-plot(Results(1:81,3),'g')
+semilogy(Results(1:81,3),'g')
 hold on
-plot(Results(1:81,4),'b')
-hold on
-plot(Results(1:81,5),'m')
-hold on
-plot(Results(1:81,6),'c')
-hold on
-plot(Results(1:81,7),'k')
-hold on
-plot(Results(1:81,8),'y')
-
-% figure
-% plot(Results(1:81,7),'g')
-% hold on
-% plot(Results(1:81,8),'b')
-% hold on
-% plot(Results(1:81,9),'m')
+semilogy(Results(1:81,4),'b')
+title('SLR (makespan/opt)')
+xlabel('different DAGs')
+ylabel('SLR')
+legend('HEFT single','HEFT multi','proposed1','final')
 
 figure
-plot(Results(1:81,9),'r')
+plot(Results(1:81,5),'-k+')
 hold on
-plot(Results(1:81,10),'k')
+plot(Results(1:81,6),'-k*')
 hold on
+plot(Results(1:81,7),'g')
+hold on
+plot(Results(1:81,8),'b')
+title('makespan')
+xlabel('different DAGs')
+ylabel('makespan')
+legend('HEFT single','HEFT multi','proposed1','final')
+
+
+figure
 plot(Results(1:81,11),'g')
 hold on
 plot(Results(1:81,12),'b')
-hold on
-plot(Results(1:81,13),'m')
-hold on
-plot(Results(1:81,14),'c')
+ylabel(' Gain in # of emulations - Total emulations / emulations required')
+xlabel('different DAGs')
+legend('proposed1','final')
 
+utilization2=utilization2 ./ 81;
+utilization2=utilization2 ./ (tasks);
+utilization2=utilization2 .* 100;
 
-
+utilization3=utilization3 ./ 81;
+utilization3=utilization3 ./ (tasks);
+utilization3=utilization3 .* 100;

@@ -8,22 +8,26 @@
 %TO DO 1: add user network topology. in this case, edge values refer to commun speed 1. I can add commun speed 2,3 etc
 %TO DO 2: slack
 
-function [A,D,range,HW_infrastracture,cpu_ref] = input_graphs(filename)
+function [A,D,range,HW_infrastracture,cpu_ref,tasks] = input_graphs(filename)
 
-diff_nodes=4;
+diff_nodes=9;
 common_nodes=3;
 max_cores=6;
 HW_infrastracture=zeros(diff_nodes,common_nodes,max_cores); % (# of diff nodes, # of max common nodes, # of max cores in a node)
-HW_infrastracture(:,:,1)= [1 1 1; 1 1 1; 1 1 1; 1 0 0]; % in the left are the slow processors. '0' means that node is not available - (arm,i5,i7,gpu)
-HW_infrastracture(:,:,2)= [1 1 1; 1 1 1; 1 1 1; 0 0 0]; % # of cores each node contains
-HW_infrastracture(:,:,3)= [0 0 0; 1 1 1; 1 1 1; 0 0 0];
-HW_infrastracture(:,:,4)= [0 0 0; 1 1 1; 1 1 1; 0 0 0];
-HW_infrastracture(:,:,5)= [0 0 0; 0 0 0; 1 1 1; 0 0 0];
-HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 1 1 1; 0 0 0];
+%                          cpu1   cpu2   cpu3   cpu4   cpu5  cpu_ref  gpu1    gpu2    gpu3
+HW_infrastracture(:,:,1)= [0 0 0; 1 0 0; 0 0 0; 1 0 0; 0 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 1 0 0]; % in the left are the slow HW nodes. '0' means that node is not available 
+HW_infrastracture(:,:,2)= [0 0 0; 1 0 0; 0 0 0; 1 0 0; 0 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % if cpu1 has 2 non-zero columns, means that 2 identical cpu1 nodes exist
+HW_infrastracture(:,:,3)= [0 0 0; 0 0 0; 0 0 0; 1 0 0; 0 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,4)= [0 0 0; 0 0 0; 0 0 0; 1 0 0; 0 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,5)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
 
-range=[2 2.5; 1.2 1.5 ; 1 1 ; 0.034 0.2]; % value range of tasks on different nodes - 1thread implementations or GPU
+%       cpu1   cpu2   cpu3      cpu4         cpu5   cpu_ref   gpu1          gpu2     gpu3
+range=[2 2.5; 1.8 2; 1.4 1.5 ; 1.25 1.3 ; 1.05 1.15 ; 1 1 ; 0.05 0.2 ; 0.04 0.2 ; 0.033 0.2]; % range of execution time values  on different nodes - 1thread implementations or GPU
 
 tasks=300; % # of tasks
+cpu_ref=6;
+
 CCR=[0.1 0.5 0.8 1 2 5 10]; % communication/computation value ratio
 betaw=[0.5 1 2 3]; %range of task values in application - 1 node
 betac=[0.5 1 2 3]; %range of edge values in application - Heterogeneity
@@ -36,7 +40,7 @@ Cminvalue=Cmean*(1-(betac(1)/2));
 Cmaxvalue=Cmean*(1+(betac(1)/2));
 
 
-cpu_ref=floor(diff_nodes/2 +1);
+
  
 
 D=zeros(tasks+1,diff_nodes,max_cores);
@@ -46,12 +50,23 @@ D=zeros(tasks+1,diff_nodes,max_cores);
 for i=1:tasks
     tmp=(Wmaxvalue-Wminvalue).*rand(1)+Wminvalue;
     D(i,cpu_ref,1)=tmp;
-    tmp2=(tmp*range(4,2)-tmp*range(4,1)).*rand(1)+tmp*range(4,1);
+    
+    %gpus
+    tmp2=(tmp*range(cpu_ref+1,2)-tmp*range(cpu_ref+1,1)).*rand(1)+tmp*range(cpu_ref+1,1);
     D(i,cpu_ref+1,1)=tmp2;
-    tmp3=(tmp*range(2,2)-tmp*range(2,1)).*rand(1)+tmp*range(2,1);
+    D(i,cpu_ref+2,1)=tmp2*0.8;
+    D(i,cpu_ref+3,1)=tmp2*0.66;
+    
+    tmp3=(tmp*range(cpu_ref-1,2)-tmp*range(cpu_ref-1,1)).*rand(1)+tmp*range(cpu_ref-1,1);
     D(i,cpu_ref-1,1)=tmp3;
-    tmp4=(tmp*range(1,2)-tmp*range(1,1)).*rand(1)+tmp*range(1,1);
-    D(i,cpu_ref-2,1)=tmp4;
+    tmp3=(tmp*range(cpu_ref-2,2)-tmp*range(cpu_ref-2,1)).*rand(1)+tmp*range(cpu_ref-2,1);
+    D(i,cpu_ref-2,1)=tmp3;  
+    tmp3=(tmp*range(cpu_ref-3,2)-tmp*range(cpu_ref-3,1)).*rand(1)+tmp*range(cpu_ref-3,1);
+    D(i,cpu_ref-3,1)=tmp3;    
+    tmp3=(tmp*range(cpu_ref-4,2)-tmp*range(cpu_ref-4,1)).*rand(1)+tmp*range(cpu_ref-4,1);
+    D(i,cpu_ref-4,1)=tmp3;
+    tmp3=(tmp*range(cpu_ref-5,2)-tmp*range(cpu_ref-5,1)).*rand(1)+tmp*range(cpu_ref-5,1);
+    D(i,cpu_ref-5,1)=tmp3;    
 end
 
 %task values for many threads
@@ -68,21 +83,21 @@ end
 
 for i=1:diff_nodes
    if ( HW_infrastracture(i,1,2) == 1 )   
-       D(:,i,2)=D(:,i,1)./speedup(:,1);
+       D(1:tasks,i,2)=D(1:tasks,i,1)./speedup(1:tasks,1);
    end
    
    if ( HW_infrastracture(i,1,4) == 1 )   
-       D(:,i,2)=D(:,i,1)./speedup(:,1);
-       D(:,i,3)=D(:,i,1)./speedup(:,2);   
-       D(:,i,4)=D(:,i,1)./speedup(:,3);       
+       D(1:tasks,i,2)=D(1:tasks,i,1)./speedup(1:tasks,1);
+       D(1:tasks,i,3)=D(1:tasks,i,1)./speedup(1:tasks,2);   
+       D(1:tasks,i,4)=D(1:tasks,i,1)./speedup(1:tasks,3);       
    end
 
    if ( HW_infrastracture(i,1,6) == 1 )   
-       D(:,i,2)=D(:,i,1)./speedup(:,1);
-       D(:,i,3)=D(:,i,1)./speedup(:,2);   
-       D(:,i,4)=D(:,i,1)./speedup(:,3);      
-       D(:,i,5)=D(:,i,1)./speedup(:,4); 
-       D(:,i,6)=D(:,i,1)./speedup(:,5);        
+       D(1:tasks,i,2)=D(1:tasks,i,1)./speedup(1:tasks,1);
+       D(1:tasks,i,3)=D(1:tasks,i,1)./speedup(1:tasks,2);   
+       D(1:tasks,i,4)=D(1:tasks,i,1)./speedup(1:tasks,3);      
+       D(1:tasks,i,5)=D(1:tasks,i,1)./speedup(1:tasks,4); 
+       D(1:tasks,i,6)=D(1:tasks,i,1)./speedup(1:tasks,5);        
    end
    
 end
