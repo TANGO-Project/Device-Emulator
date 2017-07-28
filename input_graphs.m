@@ -6,7 +6,7 @@
 %cpu_ref has to be the fastest multi-core node (as well as it contains the max # of cores)
 
 %TO DO 1: add user network topology. in this case, edge values refer to commun speed 1. I can add commun speed 2,3 etc
-%TO DO 2: slack
+
 
 function [A,D,range,HW_infrastracture,cpu_ref,tasks] = input_graphs(filename)
 
@@ -15,29 +15,29 @@ common_nodes=3;
 max_cores=6;
 HW_infrastracture=zeros(diff_nodes,common_nodes,max_cores); % (# of diff nodes, # of max common nodes, # of max cores in a node)
 %                          cpu1   cpu2   cpu3   cpu4   cpu5  cpu_ref  gpu1    gpu2    gpu3
-HW_infrastracture(:,:,1)= [1 0 0; 1 0 0; 1 0 0; 1 1 0; 1 0 0; 1 1 0 ; 0 0 0 ; 0 0 0 ; 1 0 0]; % in the left are the slow HW nodes. '0' means that node is not available 
-HW_infrastracture(:,:,2)= [1 0 0; 1 0 0; 1 0 0; 1 1 0; 1 0 0; 1 1 0 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % if cpu1 has 2 non-zero columns, means that 2 identical cpu1 nodes exist
-HW_infrastracture(:,:,3)= [0 0 0; 0 0 0; 1 0 0; 1 1 0; 1 0 0; 1 1 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
-HW_infrastracture(:,:,4)= [0 0 0; 0 0 0; 1 0 0; 1 1 0; 1 0 0; 1 1 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
-HW_infrastracture(:,:,5)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0; 1 1 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
-HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0; 1 1 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,1)= [1 0 0; 1 1 0; 1 0 0; 1 1 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % in the left are the slow HW nodes. '0' means that node is not available 
+HW_infrastracture(:,:,2)= [1 0 0; 1 1 0; 1 0 0; 1 1 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % if cpu1 has 2 non-zero columns, means that 2 identical cpu1 nodes exist
+HW_infrastracture(:,:,3)= [0 0 0; 0 0 0; 1 0 0; 1 1 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,4)= [0 0 0; 0 0 0; 1 0 0; 1 1 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,5)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0];
 
-%       cpu1   cpu2   cpu3      cpu4         cpu5   cpu_ref   gpu1          gpu2     gpu3
+%       cpu1   cpu2   cpu3      cpu4         cpu5   cpu_ref   gpu1        gpu2     gpu3
 range=[2 2.5; 1.8 2; 1.4 1.5 ; 1.25 1.3 ; 1.05 1.15 ; 1 1 ; 0.05 0.2 ; 0.04 0.2 ; 0.033 0.2]; % range of execution time values  on different nodes - 1thread implementations or GPU
 
 tasks=200; % # of tasks
 cpu_ref=6;
 
-CCR=[0.1 0.5 0.8 1 2 5 10]; % communication/computation value ratio
-betaw=[0.5 1 2 3]; %range of task values in application - 1 node
-betac=[0.5 1 2 3]; %range of edge values in application - Heterogeneity
+CCR=[0.1 0.2 0.5 1 2 5 10]; % communication/computation value ratio
+betaw=[0.5 1 1.5]; %range of task values in application - 1 node
+betac=[0.5 1 1.5]; %range of edge values in application 
 Wmean=20;   % mean task value
 Cmean=Wmean.*CCR(1);
 
-Wminvalue=Wmean*(1-(betaw(1)/2));
-Wmaxvalue=Wmean*(1+(betaw(1)/2));
-Cminvalue=Cmean*(1-(betac(1)/2));
-Cmaxvalue=Cmean*(1+(betac(1)/2));
+Wminvalue=Wmean*(1-(betaw(3)/2));
+Wmaxvalue=Wmean*(1+(betaw(3)/2));
+Cminvalue=Cmean*(1-(betac(3)/2));
+Cmaxvalue=Cmean*(1+(betac(3)/2));
 
 
 

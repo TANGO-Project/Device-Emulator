@@ -1,6 +1,6 @@
 % ONLY SINGLE CORE IMPLEMENTATIONS ARE CONSIDERED
 
-function  [output,makespan,slr] = HEFT (A,D,HW,cpu_ref)
+function  [output,makespan,slr] = HEFT_multi (A,D,HW,cpu_ref)
 
  
 [tasks,diff_nodes,max_cores]=size(D);
@@ -215,5 +215,5 @@ end
 
 fprintf('\n HEFT_mutli --- makespan=%f, speedup=%f, efficiency=%f, SLR=%f \n',makespan,speedup,speedup/(total_num_cores_nodes),slr );
 
-
+end
 

@@ -1,6 +1,6 @@
 % ONLY SINGLE CORE IMPLEMENTATIONS ARE CONSIDERED
 
-function  [output,makespan,slr] = HEFT (A,D,HW,cpu_ref)
+function  [output,makespan,slr] = HEFT_single (A,D,HW,cpu_ref)
 
  
 [tasks,diff_nodes,max_cores]=size(D);
@@ -149,7 +149,7 @@ for t=tasks-1:-1:1
     maxx=0;
     for j=t:tasks
         if (A(t,j)~=0)
-            if ( maxx< ( rank_u2(j) ) )
+            if ( maxx< ( rank_u2(j)) )
                 maxx=rank_u2(j);
             end
         end
@@ -174,5 +174,5 @@ end
 
  fprintf('\n HEFT_single --- makespan=%f, speedup=%f, efficiency=%f, SLR=%f \n',makespan,speedup,speedup/(total_num_cores_nodes),slr );
 
-
+end
 
