@@ -1,9 +1,4 @@
-% it is described by algorithm5.txt 
 
-% but I use a lower bound to the fastest node in order to
-%reduce the number of emulations of the fastest node
-%it gives slightly lower quality solution than my1 because the new inequality has
-%been added here uses ex_times() not D()
 
 function  [output,emulations,makespan,slr,em,util,less_em] = proposed (A,D,HW,cpu_ref, range, THRES, THRESHOLD, THR,THR2)
 
