@@ -62,7 +62,7 @@ OUTPUT:
   d) 'utilizationX' shows the percetage (%) of each node's/core's usage
 
 
-RERATION TO OTHER TANGO COMPONENTS
+RELATION TO OTHER TANGO COMPONENTS
 
 Device Emulator is currently used as a standalone tool in TANGO. However, it will be intergrated with the Device Supervisor, Programing model and runtime as well as ALDE.
 
