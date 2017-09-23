@@ -7,10 +7,11 @@ This work is ongoing.
 
 ## DESCRIPTION
 
-The Device Emulator (DE) component finds the initial mapping of the tasks onto the nodes/cores (at compile time), i.e., which task should run on each node/core. 
-The mapping procedure is static and thus it does not take into account any runtime constraints. At this stage, the DE finds a good solution in low time. 
+The Device Emulator (DE) component finds an efficient mapping of the tasks onto the nodes/cores (at compile time), i.e., which task should run on each node/core. 
+The mapping procedure is static and thus it does not take into account any runtime constraints. 
+The DE is based on a new methodology that reduces the number of emulations required as well as to new Heuristics that enable multithreading; the above are applicable to most of the list scheduling based algorithms.
 The DE component addresses this problem by modifying one of the state of the art list scheduling algorithms (HEFT), in a way that the number of the emulations required is minimized. 
-Thus, a good solution is capable to be found fast. The total time needed for the tasks to be mapped onto the nodes/cores is critical for TANGO and this is why the DE emulator component is of high importance.
+Thus, an efficient solution is capable to be found fast. The total time needed for the tasks to be mapped onto the nodes/cores is critical for TANGO and this is why the DE emulator component is of high importance.
 
 ## FILES 
 
