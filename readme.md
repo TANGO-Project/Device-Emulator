@@ -7,11 +7,15 @@ This work is ongoing.
 
 ## DESCRIPTION
 
-The Device Emulator (DE) component finds an efficient mapping of the tasks onto the nodes/cores (at compile time), i.e., which task should run on each node/core. 
-The mapping procedure is static and thus it does not take into account any runtime constraints. 
-The DE is based on a new methodology that reduces the number of emulations required as well as to new Heuristics that enable multithreading; the above are applicable to most of the list scheduling based algorithms.
-The DE component addresses this problem by modifying one of the state of the art list scheduling algorithms (HEFT), in a way that the number of the emulations required is minimized. 
-Thus, an efficient solution is capable to be found fast. The total time needed for the tasks to be mapped onto the nodes/cores is critical for TANGO and this is why the DE emulator component is of high importance.
+Efficient application scheduling is critical for achieving high performance in heterogeneous computing systems. This
+problem has proved to be NP-complete, heading research efforts in obtaining low complexity heuristics that produce good schedules. Although this problem has been extensively studied in the past, first, all the related algorithms assume the computation costs of application tasks on processors available a priori, ignoring the fact that the time needed to run/simulate all these tasks is orders of magnitude higher than finding a good schedule, especially in heterogeneous systems. Second, they face application tasks as single thread implementations only, but in practice tasks are normally split into multiple threads.
+
+The Device Emulator (DE) component is an implementation of a new efficient task scheduling method addressing the above problems in
+heterogeneous computing systems. This method has been applied to the well known and popular HEFT algorithm, but it is applicable to other algorithms too, such as HCPT, HPS, PETS and CPOP.
+The DE finds the initial mapping of the tasks onto the nodes/cores (at compile time), i.e., which task should run on each node/core. The mapping procedure is static and thus it does not take into account any runtime constraints. 
+We show that extending HEFT algorithm with the proposed method, it achieves better schedule lengths (by facing tasks as both
+single-thread and multi-thread implementations), while at the same time requires from 4 up to 24 less simulations. 
+The total time needed for the tasks to be mapped onto the nodes/cores is critical for TANGO and this is why the DE emulator component is of high importance.
 
 ## FILES 
 
@@ -34,22 +38,21 @@ First, the user has to specify the following
 
   1.  in main.m  
     * 'THRESHOLD'. (a <= THRESHOLD <= 2a), where a is the number of different hardware nodes 
-    * 'filename' - the appropriate directory with the graphs
+    * the loop bounds of 't1' - specify the number of the tasks according to tasks array 
+    * the loop bounds of 't2' - specify CCR value according to CCR array 
+    * the loop bounds of 't3' - specify beta value according to beta arrays
+    * the loop bounds of 'j,k,m,n' - specify shape of the DAGs 
   2.  in input_graphs.m 
-    * 'HW_infrastracture' - defines the number and the type of the nodes/cores 
+    * 'HW_infrastracture' - defines the number and the type of the procesors/cores 
     * 'range' array - defines the range of the execution time values on different nodes 
-    * 'tasks' - defines the # of the tasks
-    * pointer to 'CCR' - communication/computation value ratio 
-    * pointer to 'betaw' - range of execution time values in the reference node 
-    * pointer to 'betac' - range of communication time values
     
-Then, the user has to run main.m file
+Then, the user has to run the main.m file
 
 OUTPUT: 
 
-  * the are 3 different plots showing the quality of the solution as well as the gain in the number of emulations 
-  * 'output_myX' array shows which task is executed on which node/core. More specificaly 1st column specifies the task 2nd column gives the start time of the current task 3rd column gives the end time of the current task 4th column gives the type of node that the current task is executed on 5th column gives the exact node that the current task is executed on 6th column gives the number of the threads of that task columns 7-12 specify which core is active during the execution of the current task 
-  * 'emulations_myX' specifies which nodes are emulated for each task 
+  * The quality of the solution is measured in terms of makespan, SLR, speedup and simulation gain  
+  * 'output_myX' array shows which task is executed on which processor/core. More specificaly 1st column specifies the task 2nd column gives the start time of the current task 3rd column gives the end time of the current task 4th column gives the type of node that the current task is executed on 5th column gives the exact node that the current task is executed on 6th column gives the number of the threads of that task columns 7-12 specify which core is active during the execution of the current task 
+  * 'emulations_myX' specifies which processors are simulated for each task 
   * 'utilizationX' shows the percetage (%) of each node's/core's usage
 
 ## RELATION TO OTHER TANGO COMPONENTS
