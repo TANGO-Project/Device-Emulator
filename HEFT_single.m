@@ -1,6 +1,6 @@
 % ONLY SINGLE CORE IMPLEMENTATIONS ARE CONSIDERED
 
-function  [output,makespan,slr] = HEFT_single (A,D,HW,cpu_ref)
+function  [output,makespan,speedup] = HEFT_single (A,D,HW,cpu_ref)
 
  
 [tasks,diff_nodes,max_cores]=size(D);
@@ -36,7 +36,6 @@ avail_proc=zeros(diff_nodes,common_nodes,max_cores);
 
 %(task executed, start, finish, diff_node #, common node #, core #) for each executed task
 output=zeros(tasks,6);
-
 
 
 
@@ -139,12 +138,25 @@ output=zeros(tasks,6);
 
  end
  
- 
  makespan=output(sink,3);
- speedup=sum(D(:,diff_nodes,1)) / makespan;
+ 
+ %find fastest node
+ fastest_i=0;fastest_j=0;
+ flag=0;
+ for i=diff_nodes:-1:1
+     for j=common_nodes:-1:1
+         if ( (HW(i,j,1) ~= 0) && (flag==0) )
+             fastest_i=i;
+             fastest_j=j;
+             flag=1;
+         end
+     end
+ end  
+ 
+ speedup=sum(D(:,fastest_i,1)) / makespan;
  
  %calculate Critical Path on the fastest node
-rank_u2(tasks)=D(tasks,diff_nodes,1);
+rank_u2(tasks)=D(tasks,fastest_i,1);
 for t=tasks-1:-1:1
     maxx=0;
     for j=t:tasks
@@ -153,11 +165,11 @@ for t=tasks-1:-1:1
                 maxx=rank_u2(j);
             end
         end
-    rank_u2(t)=maxx+D(t,diff_nodes,1);   
+    rank_u2(t)=maxx+D(t,fastest_i,1);   
     end
 end
 
-cp=max(rank_u2);
+[cp,gg]=max(rank_u2);
 slr=makespan/cp;
 
 %compute total # of nodes and cores
@@ -172,7 +184,7 @@ for i=1:diff_nodes
     end
 end
 
- fprintf('\n HEFT_single --- makespan=%f, speedup=%f, efficiency=%f, SLR=%f \n',makespan,speedup,speedup/(total_num_cores_nodes),slr );
+ fprintf('\n HEFT_single --- makespan=%f, speedup=%f, efficiency=%f, Speedup%f \n',makespan,speedup,speedup/(total_num_cores_nodes),speedup );
 
 end
 

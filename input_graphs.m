@@ -8,36 +8,34 @@
 %TO DO 1: add user network topology. in this case, edge values refer to commun speed 1. I can add commun speed 2,3 etc
 
 
-function [A,D,range,HW_infrastracture,cpu_ref,tasks] = input_graphs(filename)
+function [A,D,range,HW_infrastracture,cpu_ref] = input_graphs(filename,tasks,ccr,betaw,betac)
 
 diff_nodes=9;
 common_nodes=3;
 max_cores=6;
 HW_infrastracture=zeros(diff_nodes,common_nodes,max_cores); % (# of diff nodes, # of max common nodes, # of max cores in a node)
 %                          cpu1   cpu2   cpu3   cpu4   cpu5  cpu_ref  gpu1    gpu2    gpu3
-HW_infrastracture(:,:,1)= [1 0 0; 1 1 0; 1 0 0; 1 1 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % in the left are the slow HW nodes. '0' means that node is not available 
-HW_infrastracture(:,:,2)= [1 0 0; 1 1 0; 1 0 0; 1 1 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % if cpu1 has 2 non-zero columns, means that 2 identical cpu1 nodes exist
-HW_infrastracture(:,:,3)= [0 0 0; 0 0 0; 1 0 0; 1 1 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0];
-HW_infrastracture(:,:,4)= [0 0 0; 0 0 0; 1 0 0; 1 1 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0];
-HW_infrastracture(:,:,5)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0];
-HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0; 1 1 1 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,1)= [0 0 0; 0 0 0; 1 0 0; 1 0 0; 1 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % in the left are the slow HW nodes. '0' means that node is not available 
+HW_infrastracture(:,:,2)= [0 0 0; 0 0 0; 1 0 0; 1 0 0; 1 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % if cpu1 has 2 non-zero columns, means that 2 identical cpu1 nodes exist
+HW_infrastracture(:,:,3)= [0 0 0; 0 0 0; 1 0 0; 1 0 0; 1 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0]; % cpu_ref is always the processor with the max # of cores
+HW_infrastracture(:,:,4)= [0 0 0; 0 0 0; 1 0 0; 1 0 0; 1 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,5)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
+HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 0 0 0; 0 0 0; 1 0 0; 1 0 0 ; 0 0 0 ; 0 0 0 ; 0 0 0];
 
 %       cpu1   cpu2   cpu3      cpu4         cpu5   cpu_ref   gpu1        gpu2     gpu3
-range=[2 2.5; 1.8 2; 1.4 1.5 ; 1.25 1.3 ; 1.05 1.15 ; 1 1 ; 0.05 0.2 ; 0.04 0.2 ; 0.033 0.2]; % range of execution time values  on different nodes - 1thread implementations or GPU
+range=[2 2.5; 1.8 2; 1.4 1.5 ; 1.25 1.3 ; 1.05 1.15 ; 1 1 ; 0.13 0.2 ; 0.08 0.18 ; 0.05 0.15]; % range of execution time values  on different nodes - 1thread implementations or GPU
+%range=[1.35 1.45; 1.3 1.4; 1.15 1.25 ; 1.1 1.2 ; 1.05 1.15 ; 1 1 ; 0.16 0.2 ; 0.15 0.18 ; 0.13 0.16]; 
+%range=[3.5 4; 3 3.5; 2.5 2.8 ; 2 2.5 ; 1.5 2 ; 1 1 ; 0.12 0.2 ; 0.08 0.16 ; 0.05 0.12]; 
 
-tasks=200; % # of tasks
 cpu_ref=6;
 
-CCR=[0.1 0.2 0.5 1 2 5 10]; % communication/computation value ratio
-betaw=[0.5 1 1.5]; %range of task values in application - 1 node
-betac=[0.5 1 1.5]; %range of edge values in application 
 Wmean=20;   % mean task value
-Cmean=Wmean.*CCR(1);
+Cmean=Wmean.*ccr;
 
-Wminvalue=Wmean*(1-(betaw(3)/2));
-Wmaxvalue=Wmean*(1+(betaw(3)/2));
-Cminvalue=Cmean*(1-(betac(3)/2));
-Cmaxvalue=Cmean*(1+(betac(3)/2));
+Wminvalue=Wmean*(1-(betaw/2));
+Wmaxvalue=Wmean*(1+(betaw/2));
+Cminvalue=Cmean*(1-(betac/2));
+Cmaxvalue=Cmean*(1+(betac/2));
 
 
 
@@ -46,7 +44,7 @@ Cmaxvalue=Cmean*(1+(betac(3)/2));
 D=zeros(tasks+1,diff_nodes,max_cores);
 
 
-%task values for 1thread and GPU
+%task computation costs for 1thread and GPU
 for i=1:tasks
     tmp=(Wmaxvalue-Wminvalue).*rand(1)+Wminvalue;
     D(i,cpu_ref,1)=tmp;
@@ -69,7 +67,7 @@ for i=1:tasks
     D(i,cpu_ref-5,1)=tmp3;    
 end
 
-%task values for many threads
+%task computation costs for many threads
   speedup=zeros(tasks+1,max_cores-1);
 for i=1:tasks
     tmp1=(0.92-0.2).*rand(1)+0.1;
@@ -169,6 +167,18 @@ for i=1:tasks
     end
 end
 
+
+% for i=1:tasks
+%     cnt=0;
+%     for j=1:tasks
+%         if ( A(j,i)~=0 )
+%             cnt=cnt+1;
+%         end
+%     end
+%     if (cnt==0) 
+%         A(1,i)=0.00001;
+%     end
+% end
 %h = view(biograph(A,[],'ShowWeights','on'))
 
 
