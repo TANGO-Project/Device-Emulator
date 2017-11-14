@@ -1,6 +1,6 @@
 % ONLY MAX-CORE IMPLEMENTATIONS ARE CONSIDERED
 
-function  [output,makespan,speedup] = HEFT_multi (A,D,HW,cpu_ref)
+function  [output,makespan,speed_up] = HEFT_multi (A,D,HW,cpu_ref)
 
  
 [tasks,diff_nodes,max_cores]=size(D);
@@ -196,21 +196,49 @@ output=zeros(tasks,6);
      end
  end 
  
- speedup=sum(D(:,fastest_i,1)) / makespan;
- 
- %calculate Critical Path on the fastest node
-rank_u2(tasks)=D(tasks,fastest_i,1);
-for t=tasks-1:-1:1
+    % find the number of the cores of the fastest processor
+    if (fastest_i<=6) % if the fastest processor is a multicore processor
+        for k=max_cores:-1:1
+            if ( HW(fastest_i,1,k)==1 )
+                fastest_k=k;
+                break;
+            end
+        end
+    end
+
+
+if (fastest_i>6)
+     speed_up=sum(D(:,fastest_i,1)) / makespan; % sum of the fastest node
+    %calculate Critical Path on the fastest node
+    rank_u2(tasks)=D(tasks,fastest_i,1);
+    for t=tasks-1:-1:1
     maxx=0;
     for j=t:tasks
         if (A(t,j)~=0)
-            if ( maxx< ( rank_u2(j)) )
+            if ( maxx< ( rank_u2(j) ) )
                 maxx=rank_u2(j);
             end
         end
     rank_u2(t)=maxx+D(t,fastest_i,1);   
     end
+    end
+else
+     speed_up=sum(D(:,fastest_i,fastest_k)) / makespan; % sum of the fastest node
+    %calculate Critical Path on the fastest node
+    rank_u2(tasks)=D(tasks,fastest_i,fastest_k);
+    for t=tasks-1:-1:1
+    maxx=0;
+    for j=t:tasks
+        if (A(t,j)~=0)
+            if ( maxx< ( rank_u2(j) ) )
+                maxx=rank_u2(j);
+            end
+        end
+    rank_u2(t)=maxx+D(t,fastest_i,fastest_k);   
+    end
+    end    
 end
+  
 
 [cp,gg]=max(rank_u2);
 slr=makespan/cp;
@@ -227,7 +255,7 @@ for i=1:diff_nodes
     end
 end
 
-fprintf('\n HEFT_mutli --- makespan=%f, speedup=%f, efficiency=%f, Speedup=%f \n',makespan,speedup,speedup/(total_num_cores_nodes),speedup);
+fprintf('\n HEFT_mutli --- makespan=%f, slr=%f, efficiency=%f, Speedup=%f \n',makespan,slr,speed_up/(total_num_cores_nodes),speed_up);
 
 end
 

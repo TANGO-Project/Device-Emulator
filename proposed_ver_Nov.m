@@ -1222,16 +1222,24 @@ end
       
       
 %------------------------------------------------------------------      
- 
-em=em+tasks-1;% # of emulations
+    % find the number of the cores of the fastest processor
+    if (fastest_i<=6) % if the fastest processor is a multicore processor
+        for k=max_cores:-1:1
+            if ( HW(fastest_i,1,k)==1 )
+                fastest_k=k;
+                break;
+            end
+        end
+    end
 
- 
- makespan=output(sink,3);
- speed_up=sum(D(:,fastest_i,1)) / makespan; % sum of the fastest node
- 
- %calculate Critical Path on the fastest node
-rank_u2(tasks)=D(tasks,fastest_i,1);
-for t=tasks-1:-1:1
+em=em+tasks-1;% # of emulations
+makespan=output(sink,3);
+
+if (fastest_i>6)
+     speed_up=sum(D(:,fastest_i,1)) / makespan; % sum of the fastest node
+    %calculate Critical Path on the fastest node
+    rank_u2(tasks)=D(tasks,fastest_i,1);
+    for t=tasks-1:-1:1
     maxx=0;
     for j=t:tasks
         if (A(t,j)~=0)
@@ -1241,7 +1249,27 @@ for t=tasks-1:-1:1
         end
     rank_u2(t)=maxx+D(t,fastest_i,1);   
     end
+    end
+else
+     speed_up=sum(D(:,fastest_i,fastest_k)) / makespan; % sum of the fastest node
+    %calculate Critical Path on the fastest node
+    rank_u2(tasks)=D(tasks,fastest_i,fastest_k);
+    for t=tasks-1:-1:1
+    maxx=0;
+    for j=t:tasks
+        if (A(t,j)~=0)
+            if ( maxx< ( rank_u2(j) ) )
+                maxx=rank_u2(j);
+            end
+        end
+    rank_u2(t)=maxx+D(t,fastest_i,fastest_k);   
+    end
+    end    
 end
+  
+
+
+
 [cp,gg]=max(rank_u2);
 
 slr=makespan/cp;
