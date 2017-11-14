@@ -1003,8 +1003,6 @@ end
       
 %------------------------------------------------------------------      
  
-em=em+tasks-1;% # of emulations
-
      % find the number of the cores of the fastest processor
     if (fastest_i<=6) % if the fastest processor is a multicore processor
         for k=max_cores:-1:1
