@@ -1,9 +1,5 @@
-% PLEASE SPECIFY THE FOLLOWING
-%HW_infrastracture, tasks, Heterog, Wmean, range, & pointers to CCR, betaw, betac & input file name
 
-%cpu_ref has to be the fastest multi-core node (as well as it contains the max # of cores)
-
-%TO DO 1: add user network topology. in this case, edge values refer to commun speed 1. I can add commun speed 2,3 etc
+%cpu_ref has to be processor #6
 
 
 function [A,D,range,HW_infrastracture,cpu_ref,tasks] = input_real_graphs(app)
@@ -24,31 +20,6 @@ HW_infrastracture(:,:,6)= [0 0 0; 0 0 0; 0 0 0; 0 0 0 ; 1 0 0 ; 1 0 0  ; 0 0 0 ;
 range=[2 2.5; 1.8 2; 1.4 1.5 ; 1.25 1.3 ; 1.05 1.15 ; 1 1 ; 0.1 0.2 ; 0.08 0.2 ; 0.06 0.2]; % range of execution time values  on different nodes - 1thread implementations or GPU
 
 cpu_ref=6;
-
-% if (app==1)
-%     [A,D]=create_montage();
-%     tasks=92; 
-%     
-% elseif (app==2)
-%     [A,D]=create_cybershake();
-%     tasks=66;
-%     
-% elseif (app==3)
-%     [A,D]=create_broadband();
-%     tasks=82;
-%     
-% elseif (app==4)
-%     [A,D]=create_epigenomics();
-%     tasks=85;
-%     
-% elseif (app==5) 
-%     [A,D]=create_LIGO();
-%     tasks=80;    
-%     
-% else
-%     fprintf('\n ERROR \n');
-% end
-
 
 if (app==1)
     load('Montage_50_A.mat');
