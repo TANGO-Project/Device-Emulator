@@ -12,7 +12,7 @@ real_DAG=8;        % DAG=[1-15]  - 15 different real DAGs are already stored
 %------------- Define the THRESHOLD value - IT DEPENDS ON THE TARGET HW INFRASTRACTURE ------------------
 THRESHOLD=8;       % (# of processors <= THRESHOLD < 2x(#of processors))   --- It is found experimentally  
  
- filename=sprintf('/usr/not-backed-up/PhD-postdoc/task_mapping/codes/multithreading_ver4/DAGs/%d/%d.txt',tasks(2),DAG);
+ filename=sprintf('/usr/.../DAGs/%d/%d.txt',tasks(2),DAG);
     
  %[A,D,range,HW,cpu_ref]=input_graphs(filename,tasks(2),CCR(2),betaw(2),betac(2)); 
  [A,D,range,HW,cpu_ref,tasks]=input_real_graphs(real_DAG);
