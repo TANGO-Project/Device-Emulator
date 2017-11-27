@@ -1,6 +1,6 @@
 %I ASSUME THAT THE FASTEST MULTI-CORE PROCESSOR IS #6 - PROCESSORS #7,8,9 ARE COPROCESSORS
 
-function  [output,emulations,makespan,speed_up,em,util,less_em] = DE (A,D,HW, range, THRES, THRESHOLD, THR,THR2,makespan_quality)
+function  [output,makespan,speed_up,em,util,less_em] = DE (A,D,HW, range, THRES, THRESHOLD, THR,THR2,makespan_quality)
 
 
 [tasks,diff_nodes,max_cores]=size(D);
