@@ -43,7 +43,8 @@ First, the user has to specify the following
     * the real_DAG value - this value specifies which of the real graphs to be loaded. 
   2.  in input_graphs.m 
     * 'HW_infrastracture' - defines the number and the type of the procesors/cores 
-    * 'range' array - defines the range of the execution time values on different nodes 
+    * 'range' array - defines the computation capability of the processors. The computation costs of the proces-
+sors are random values within the array's range
     
 Then, the user has to run the main.m file
 
