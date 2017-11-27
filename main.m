@@ -17,5 +17,5 @@ THRESHOLD=8;       % (# of processors <= THRESHOLD < 2x(#of processors))   --- I
  %[A,D,range,HW,cpu_ref]=input_graphs(filename,tasks(2),CCR(2),betaw(2),betac(2)); 
  [A,D,range,HW,cpu_ref,tasks]=input_real_graphs(real_DAG);
 
- [output_my,emulations_my,makespan,speedup,emulations,Processor_utilization,less_emulation] = DE (A,D,HW,range,1.3,THRESHOLD,6,3,0);
+ [output_my,makespan,speedup,simulations,Processor_utilization,simulation_gain] = DE (A,D,HW,range,1.3,THRESHOLD,6,3,0);
 
