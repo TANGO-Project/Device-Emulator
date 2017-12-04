@@ -17,7 +17,7 @@ THRESHOLD=8;       % (# of processors <= THRESHOLD < 2x(#of processors))   --- I
  
     
 %Define the path that the DE files have been extracted. 
- filename=sprintf('/usr/not-backed-up/PhD-postdoc/task_mapping/codes/multithreading_ver4/DAGs/%d/%d.txt',tasks(2),DAG);
+ filename=sprintf('/.../DAGs/%d/%d.txt',tasks(2),DAG);
  
  
  [A,D,range,HW,cpu_ref]=input_graphs(filename,tasks(2),CCR(2),betaw(2),betac(2));   % FOR RANDOM DAGS ONLY
