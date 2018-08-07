@@ -1,7 +1,4 @@
-%Identical with DE.m but in Algorithm5 (journal), in the last loop kernel I do only:
-%if ( S(i) <= min_EFT_on_PHCCP )
-
-%I ASSUME THAT THE FASTEST MULTI-CORE PROCESSOR IS #6 - PROCESSORS #7,8,9 ARE COPROCESSORS
+%THE FASTEST MULTI-CORE PROCESSOR IS #6 - PROCESSORS #7,8,9 ARE COPROCESSORS
 
 function  [output,emulations,makespan,speed_up,slr,em,util,less_em] = DE (A,D,HW, range, THRES, THRESHOLD, THR,THR2,makespan_quality)
 
