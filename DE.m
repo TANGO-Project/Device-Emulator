@@ -1,3 +1,6 @@
+%Identical with DE.m but in Algorithm5 (journal), in the last loop kernel I do only:
+%if ( S(i) <= min_EFT_on_PHCCP )
+
 %I ASSUME THAT THE FASTEST MULTI-CORE PROCESSOR IS #6 - PROCESSORS #7,8,9 ARE COPROCESSORS
 
 function  [output,emulations,makespan,speed_up,slr,em,util,less_em] = DE (A,D,HW, range, THRES, THRESHOLD, THR,THR2,makespan_quality)
@@ -286,15 +289,8 @@ if (EXT==1) %if the cpu_ref is not the highest computation capability processor
     if ( fastest_i > 6 )  %if the fastest node is gpu 
        min_gpu=min_single(fastest_i,1)-ex_times(ind)/gpu_speedup+ex_times(ind)*range(fastest_i,1);
        for it1=1:fastest_i-1
-            if ( min_single(it1,1) <= min_multi(it1,1) ) 
-                if ( min_single(it1,1) <= ( min_gpu ) ) 
-                   emulations(ind,fastest_i)=-1;
-                end
-            else
-                max_multi=min_multi(it1,1)-ex_times(ind)/speedup(min_multi(it1,3))+ex_times(ind)/min_speedup(min_multi(it1,3));
-                if ( max_multi <= ( min_gpu ) ) 
-                   emulations(ind,fastest_i)=-1;
-                end
+           if ( min_single(it1,1) <= ( min_gpu ) ) 
+               emulations(ind,fastest_i)=-1;
             end
        end
     end
@@ -644,24 +640,17 @@ end
                                  emulations(ind,it1)=-1;
                              end
                            end
-                           
-                       if (EXT==1) %if the cpu_ref is not the highest computation capability processor
-                            if ( fastest_i > 6 )  %if the fastest node is gpu 
-                               min_gpu=min_single(fastest_i,1)-ex_times(ind)/gpu_speedup+ex_times(ind)*range(fastest_i,1);
-                               for it1=1:fastest_i-1
-                                    if ( min_single(it1,1) <= min_multi(it1,1) ) 
-                                        if ( min_single(it1,1) <= ( min_gpu ) ) 
+
+                            if (EXT==1) %if the cpu_ref is not the highest computation capability processor
+                                if ( fastest_i > 6 )  %if the fastest node is gpu 
+                                   min_gpu=min_single(fastest_i,1)-ex_times(ind)/gpu_speedup+ex_times(ind)*range(fastest_i,1);
+                                   for it1=1:fastest_i-1
+                                       if ( min_single(it1,1) <= ( min_gpu ) ) 
                                            emulations(ind,fastest_i)=-1;
                                         end
-                                    else
-                                        max_multi=min_multi(it1,1)-ex_times(ind)/speedup(min_multi(it1,3))+ex_times(ind)/min_speedup(min_multi(it1,3));
-                                        if ( max_multi <= ( min_gpu ) ) 
-                                           emulations(ind,fastest_i)=-1;
-                                        end
-                                    end
-                               end
-                            end                           
-                       end
+                                   end
+                                end
+                            end 
                       % b) emulate remaining solutions to find the best
                                     %find the fastest node for the current task
                               ex_min1=99999;
